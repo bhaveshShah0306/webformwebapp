@@ -134,9 +134,10 @@
             });
 
             // Download template
-            $('#btnDownloadTemplate').click(function() {
-                downloadTemplate();
+            $('#btnDownloadTemplate').click(function () {
+                window.location.href = 'DownloadTemplate.ashx';
             });
+
         });
 
         function handleFileSelect(files) {
@@ -204,22 +205,7 @@
                     clearInterval(interval);
                 }
             }, 100);
-        }
-
-        function downloadTemplate() {
-            PageMethods.GenerateTemplate(
-                function(result) {
-                    if (result.success) {
-                        window.location.href = 'DownloadTemplate.ashx';
-                    } else {
-                        alert('Error generating template: ' + result.message);
-                    }
-                },
-                function(error) {
-                    alert('Error: ' + error.get_message());
-                }
-            );
-        }
+        }        
 
         function showResults(success, message, details) {
             $('.progress-bar').css('width', '100%');
