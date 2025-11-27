@@ -198,72 +198,84 @@ namespace WebApplication1
         {
             int successCount = 0;
 
-            using (SqlConnection conn = new SqlConnection(connectionString))
+            try
             {
-                conn.Open();
-
-                // Create a DataTable for bulk insert
-                DataTable dt = new DataTable();
-                dt.Columns.Add("BookingId", typeof(string));
-                dt.Columns.Add("GuestName", typeof(string));
-                dt.Columns.Add("GuestEmail", typeof(string));
-                dt.Columns.Add("GuestPhone", typeof(string));
-                dt.Columns.Add("HotelCode", typeof(string));
-                dt.Columns.Add("RoomType", typeof(string));
-                dt.Columns.Add("CheckInDate", typeof(DateTime));
-                dt.Columns.Add("CheckOutDate", typeof(DateTime));
-                dt.Columns.Add("NumberOfGuests", typeof(int));
-                dt.Columns.Add("SpecialRequests", typeof(string));
-                dt.Columns.Add("AgentId", typeof(string));
-                dt.Columns.Add("AgentLocation", typeof(string));
-                dt.Columns.Add("BookingStatus", typeof(string));
-                dt.Columns.Add("UploadedDate", typeof(DateTime));
-
-                foreach (var booking in bookings)
+                using (SqlConnection conn = new SqlConnection(connectionString))
                 {
-                    dt.Rows.Add(
-                        GenerateBookingId(),
-                        booking.GuestName,
-                        booking.GuestEmail,
-                        booking.GuestPhone,
-                        booking.HotelCode,
-                        booking.RoomType,
-                        booking.CheckInDate,
-                        booking.CheckOutDate,
-                        booking.NumberOfGuests,
-                        booking.SpecialRequests ?? "",
-                        booking.AgentId,
-                        booking.AgentLocation,
-                        "Pending",
-                        booking.UploadedDate
-                    );
+                    conn.Open();
+
+                    // Create a DataTable for bulk insert
+                    DataTable dt = new DataTable();
+                    dt.Columns.Add("BookingId", typeof(string));
+                    dt.Columns.Add("GuestName", typeof(string));
+                    dt.Columns.Add("GuestEmail", typeof(string));
+                    dt.Columns.Add("GuestPhone", typeof(string));
+                    dt.Columns.Add("HotelCode", typeof(string));
+                    dt.Columns.Add("RoomType", typeof(string));
+                    dt.Columns.Add("CheckInDate", typeof(DateTime));
+                    dt.Columns.Add("CheckOutDate", typeof(DateTime));
+                    dt.Columns.Add("NumberOfGuests", typeof(int));
+                    dt.Columns.Add("SpecialRequests", typeof(string));
+                    dt.Columns.Add("AgentId", typeof(string));
+                    dt.Columns.Add("AgentLocation", typeof(string));
+                    dt.Columns.Add("BookingStatus", typeof(string));
+                    dt.Columns.Add("UploadedDate", typeof(DateTime));
+
+                    foreach (var booking in bookings)
+                    {
+                        dt.Rows.Add(
+                            GenerateBookingId(),
+                            booking.GuestName,
+                            booking.GuestEmail,
+                            booking.GuestPhone,
+                            booking.HotelCode,
+                            booking.RoomType,
+                            booking.CheckInDate,
+                            booking.CheckOutDate,
+                            booking.NumberOfGuests,
+                            booking.SpecialRequests ?? "",
+                            booking.AgentId,
+                            booking.AgentLocation,
+                            "Pending",
+                            booking.UploadedDate
+                        );
+                    }
+
+                    // Use SqlBulkCopy for efficient bulk insert
+                    using (SqlBulkCopy bulkCopy = new SqlBulkCopy(conn))
+                    {
+                        bulkCopy.DestinationTableName = "HotelBookings";
+                        bulkCopy.BatchSize = 100;
+
+                        // Map columns
+                        bulkCopy.ColumnMappings.Add("BookingId", "BookingId");
+                        bulkCopy.ColumnMappings.Add("GuestName", "GuestName");
+                        bulkCopy.ColumnMappings.Add("GuestEmail", "GuestEmail");
+                        bulkCopy.ColumnMappings.Add("GuestPhone", "GuestPhone");
+                        bulkCopy.ColumnMappings.Add("HotelCode", "HotelCode");
+                        bulkCopy.ColumnMappings.Add("RoomType", "RoomType");
+                        bulkCopy.ColumnMappings.Add("CheckInDate", "CheckInDate");
+                        bulkCopy.ColumnMappings.Add("CheckOutDate", "CheckOutDate");
+                        bulkCopy.ColumnMappings.Add("NumberOfGuests", "NumberOfGuests");
+                        bulkCopy.ColumnMappings.Add("SpecialRequests", "SpecialRequests");
+                        bulkCopy.ColumnMappings.Add("AgentId", "AgentId");
+                        bulkCopy.ColumnMappings.Add("AgentLocation", "AgentLocation");
+                        bulkCopy.ColumnMappings.Add("BookingStatus", "BookingStatus");
+                        bulkCopy.ColumnMappings.Add("UploadedDate", "UploadedDate");
+
+                        bulkCopy.WriteToServer(dt);
+                        successCount = dt.Rows.Count;
+                    }
                 }
-
-                // Use SqlBulkCopy for efficient bulk insert
-                using (SqlBulkCopy bulkCopy = new SqlBulkCopy(conn))
-                {
-                    bulkCopy.DestinationTableName = "HotelBookings";
-                    bulkCopy.BatchSize = 100;
-
-                    // Map columns
-                    bulkCopy.ColumnMappings.Add("BookingId", "BookingId");
-                    bulkCopy.ColumnMappings.Add("GuestName", "GuestName");
-                    bulkCopy.ColumnMappings.Add("GuestEmail", "GuestEmail");
-                    bulkCopy.ColumnMappings.Add("GuestPhone", "GuestPhone");
-                    bulkCopy.ColumnMappings.Add("HotelCode", "HotelCode");
-                    bulkCopy.ColumnMappings.Add("RoomType", "RoomType");
-                    bulkCopy.ColumnMappings.Add("CheckInDate", "CheckInDate");
-                    bulkCopy.ColumnMappings.Add("CheckOutDate", "CheckOutDate");
-                    bulkCopy.ColumnMappings.Add("NumberOfGuests", "NumberOfGuests");
-                    bulkCopy.ColumnMappings.Add("SpecialRequests", "SpecialRequests");
-                    bulkCopy.ColumnMappings.Add("AgentId", "AgentId");
-                    bulkCopy.ColumnMappings.Add("AgentLocation", "AgentLocation");
-                    bulkCopy.ColumnMappings.Add("BookingStatus", "BookingStatus");
-                    bulkCopy.ColumnMappings.Add("UploadedDate", "UploadedDate");
-
-                    bulkCopy.WriteToServer(dt);
-                    successCount = dt.Rows.Count;
-                }
+            }
+            catch (SqlException sqlEx)
+            {
+                // Log the SQL error and rethrow with more context
+                throw new Exception($"Database error during bulk insert: {sqlEx.Message}", sqlEx);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error during bulk insert: {ex.Message}", ex);
             }
 
             return successCount;
@@ -304,7 +316,10 @@ namespace WebApplication1
 
         private string GenerateBookingId()
         {
-            return "BK" + DateTime.Now.ToString("yyyyMMddHHmmss") + new Random().Next(1000, 9999);
+            // Generate unique ID using timestamp + GUID
+            string timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
+            string uniquePart = Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper();
+            return $"BK{timestamp}{uniquePart}";
         }
 
         private void ShowError(string message)
